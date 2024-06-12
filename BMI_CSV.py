@@ -15,9 +15,6 @@ BMI_data = [
 file = open('BMI_data.csv', 'w', newline='')
 writer = csv.writer(file)
 writer.writerow(['Index', 'BMI'])
-writer.writerows ( [ [i] for i in BMI_data])
-
-for i in BMI_data:
-    writer.writerow ( [i])
-
+for index, bmi in enumerate(BMI_data, start=1):
+    writer.writerow([index, bmi])
 file.close()

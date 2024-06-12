@@ -1,29 +1,32 @@
-import numpy as np
-import matplotlib.pyplot as plt
+import itertools
+import string    
+import time
 
-# Define the function f(Y) = Y - t
-def f(Y, t):
-    return Y - t
+def password_wordlist(start_range=8,end_range=10,file_name="brute.txt"):
 
-# Create a grid of t and Y values
-t = np.linspace(-4, 4, 20)
-Y = np.linspace(-4, 4, 20)
-T, Y = np.meshgrid(t, Y)
+    chars = string.ascii_lowercase + string.ascii_uppercase + string.digits + '@' + '#' + '.' + '.'
+    attempts = 0
+    f = open(file_name,'a')
 
-# Calculate the derivatives for the vector field
-dT = np.ones_like(T)
-dY = f(Y, T)
+    for password_length in range(start_range, end_range):
+        for guess in itertools.product(chars,repeat=password_length): 
+            attempts += 1
+            guess = ''.join(guess)
+            f.write(guess)
+            f.write("\n")
+            print(guess, attempts)
+            
+    f.close()
 
-# Plot the vector field
-plt.quiver(T, Y, dT, dY, color='red', scale=10)
 
-# Plot the curve (1/3) * (3 - np.exp(t) + 3 * t)
-curve_t = np.linspace(-4, 4, 100)
-curve_Y = (1/3) * (3 - np.exp(curve_t) + 3 * curve_t)
-plt.plot(curve_t, curve_Y, color='blue')
 
-# Set labels and show the plot
-plt.xlabel('t')
-plt.ylabel('Y')
-plt.grid()
-plt.show()
+start_range = 8
+end_range = 10
+file_name = "brute_password_list.txt"
+
+
+start_time = time.time()
+password_wordlist(start_range,end_range,file_name)
+end_time = time.time()
+
+print(end_time-start_time)
