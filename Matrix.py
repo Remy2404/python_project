@@ -20,6 +20,7 @@ def print_matrix(matrix):
         for element in row:
             print(Fraction(format(element)).limit_denominator(), end=' ')
         print()
+#print matrix A and B
 
 print_matrix(P)
 print()

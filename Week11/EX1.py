@@ -6,7 +6,6 @@ graph = defaultdict(list)
 
 def add_edge(graph, u, v):
     graph[u].append(v)
-    graph[v].append(u)
 
 def generate_graph(graph):
     add_edge = []
@@ -29,11 +28,11 @@ print("", end="")
 #part b : Draw the adjacency list:
 #Draws an adjcency list:
 graph = {
-    0: [1, 2, 3],
-    1: [3, 4],
-    2:[3],
+    0: [1, 2],
+    1: [3],
+    2: [3],
     3: [4],
-    4:[]
+    4: []
 }
 for node, edges in graph.items():
     print("EX1:", end=" ")
@@ -44,12 +43,10 @@ for node, edges in graph.items():
 class Graph:
     def __init__(self):
         self.graph = {}
-#         self.graph = defaultdict(list)
     def add_edge(self, u, v):
         if u not in self.graph:
             self.graph[u] = []
         self.graph[u].append(v)
-#         if v not in self.graph:
     def __str__(self):
         return str(self.graph)
 
@@ -86,4 +83,3 @@ adjacency_list = {
 
 for node, neighbors in adjacency_list.items():
     print(f"{node}: {', '.join(map(str, neighbors))}")
-
