@@ -1,0 +1,46 @@
+@startuml
+
+skinparam backgroundColor #EEEBDC
+skinparam handwritten false
+
+' ... (keep all your color and style definitions)
+
+class Graph {
+    - vertices: dict
+
+    + __init__()
+    + add_vertex(vertex: str)
+    + add_edge(start: str, end: str, distance: int)
+    + display_connections()
+    + prim_mst(start: str): list
+}
+
+class heapq <<stdlib>> {
+}
+
+Graph -right-> heapq : uses
+
+note right of Graph::vertices
+    Stores vertices and their connections
+    {vertex: {neighbor: distance}}
+end note
+
+note right of Graph::add_vertex
+    Adds a new vertex if it doesn't exist
+end note
+
+note right of Graph::add_edge
+    Adds an edge between two vertices
+    with the given distance
+end note
+
+note right of Graph::display_connections
+    Prints all vertices and their connections
+end note
+
+note right of Graph::prim_mst
+    Implements Prim's algorithm to find
+    the Minimum Spanning Tree
+end note
+
+@enduml
