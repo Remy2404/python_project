@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cambodia Provinces Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+<body>
+    <div id="map" style="height: 600px; width: 100%;"></div>
+    <script>
+        var map = L.map('map').setView([12.5657, 104.9910], 7);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Add markers and lines
+        var provinces = [
+            {name: 'Phnom Penh', position: [11.5657, 104.9910]},
+            // Add other provinces here
+        ];
+
+        provinces.forEach(function(province) {
+            L.marker(province.position).addTo(map)
+                .bindPopup(province.name);
+        });
+
+        // Add lines
+        // Use L.polyline([...], {color: 'red'}).addTo(map);
+    </script>
+</body>
+</html>
