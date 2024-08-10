@@ -67,4 +67,4 @@ print("Graph 2 Adjacency List:")
 draw_adjacency_list(graph2)
 
 # Perform DFS on graph2 starting from node 0
-print
+print()

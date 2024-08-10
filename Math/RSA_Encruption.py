@@ -1,26 +1,15 @@
 import sympy
-import hashlib
-import os
-import base64
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
-from Crypto.Random import get_random_bytes
 import matplotlib.pyplot as plt
+from matplotlib.offsetbox import TextArea, DrawingArea, OffsetImage, AnnotationBbox
 
 # Disable LaTeX rendering
 plt.rc('text', usetex=False)
 plt.rc('font', family='serif')
 
-class RSAError(Exception):
-    pass
-
 def gcd(a, b):
-    while b:
+    while b != 0:
         a, b = b, a % b
     return a
-
-def lcm(a, b):
-    return abs(a * b) // gcd(a, b)
 
 def extended_gcd(a, b):
     if a == 0:
@@ -33,8 +22,46 @@ def extended_gcd(a, b):
 def modular_inverse(e, phi):
     gcd, x, y = extended_gcd(e, phi)
     if gcd != 1:
-        raise RSAError('Modular inverse does not exist')
-    return x % phi
+        raise Exception('Modular inverse does not exist')
+    else:
+        return x % phi
+
+def generate_keypair(p, q):
+    n = p * q
+    phi = (p - 1) * (q - 1)
+    e = sympy.randprime(2, phi)
+    if gcd(e, phi) != 1:
+        raise Exception('e and phi are not coprime')
+    d = modular_inverse(e, phi)
+    return ((e, n), (d, n))
+
+def display_keys(public_key, private_key):
+    print("Public Key:")
+    print(f"  e (public exponent): {public_key[0]}")
+    print(f"  n (modulus): {public_key[1]}")
+    print("Private Key:")
+    print(f"  d (private exponent): {private_key[0]}")
+    print(f"  n (modulus): {private_key[1]}")
+    print()
+
+def encrypt(pk, plaintext):
+    key, n = pk
+    number_representation = [ord(char) for char in plaintext]
+    cipher = [pow(num, key, n) for num in number_representation]
+    return cipher
+
+def decrypt(pk, ciphertext):
+    key, n = pk
+    plain = [chr(pow(num, key, n)) for num in ciphertext]
+    return ''.join(plain)
+
+def is_prime(num):
+    if num < 2:
+        return False
+    for i in range(2, int(num**0.5) + 1):
+        if num % i == 0:
+            return False
+    return True
 
 def generate_large_prime(bits):
     while True:
@@ -42,102 +69,68 @@ def generate_large_prime(bits):
         if is_prime(prime_candidate):
             return prime_candidate
 
-def is_prime(num):
-    return sympy.isprime(num)
+def display_encrypted_decrypted(encrypted_msg, decrypted_msg):
+    print("Encrypted message (in hex):")
+    print(" ".join([hex(num) for num in encrypted_msg]))
+    print("Decrypted message:")
+    print(decrypted_msg)
+    print()
 
-def generate_keypair(bits=2048):
-    p = generate_large_prime(bits // 2)
-    q = generate_large_prime(bits // 2)
-    n = p * q
-    phi = (p - 1) * (q - 1)
-    e = sympy.randprime(2, phi)
-    if gcd(e, phi) != 1:
-        raise RSAError('e and phi are not coprime')
-    d = modular_inverse(e, phi)
-    return ((e, n), (d, n))
+def display_rsa_process_plain(p, q, public, private, message, encrypted_msg, decrypted_msg):
+    fig, ax = plt.subplots(figsize=(12, 10))
+    ax.axis('off')
 
-def encrypt(pk, plaintext):
-    key, n = pk
-    # OAEP padding
-    message = plaintext.encode('utf-8')
-    if len(message) > n.bit_length() // 8 - 2:
-        raise ValueError("Message too long for RSA encryption.")
-    
-    # Hash the message
-    hash_value = hashlib.sha256(message).digest()
-    # Encrypt the hash
-    cipher = pow(int.from_bytes(message, byteorder='big'), key, n)
-    return cipher, hash_value
+    steps = [
+        "1. Choose two distinct prime numbers p and q.",
+        f"   p = {p}, q = {q}",
+        "2. Compute n = p * q.",
+        f"   n = {p} * {q} = {p * q}",
+        "3. Compute the totient phi = (p - 1) * (q - 1).",
+        f"   phi = ({p} - 1) * ({q} - 1) = {(p - 1) * (q - 1)}",
+        "4. Choose an integer e such that 1 < e < phi and gcd(e, phi) = 1.",
+        f"   e = {public[0]}",
+        "5. Compute d as the modular multiplicative inverse of e modulo phi.",
+        f"   d = {private[0]}",
+        "6. The public key is (e, n) and the private key is (d, n).",
+        f"   Public Key: (e = {public[0]}, n = {public[1]})",
+        f"   Private Key: (d = {private[0]}, n = {private[1]})",
+        "7. To encrypt a message, convert the message to a number representation.",
+        f"   Message: {message}",
+        f"   Number representation: {[ord(char) for char in message]}",
+        "8. Encrypt each number using the public key (e, n).",
+        f"   Encrypted message: {encrypted_msg}",
+        "9. To decrypt the message, use the private key (d, n).",
+        f"   Decrypted message: {decrypted_msg}"
+    ]
 
-def decrypt(pk, ciphertext, hash_value):
-    key, n = pk
-    decrypted = pow(ciphertext, key, n)
-    decrypted_message = decrypted.to_bytes((decrypted.bit_length() + 7) // 8, byteorder='big')
-    
-    # Verify hash
-    if hashlib.sha256(decrypted_message).digest() != hash_value:
-        raise RSAError("Hash verification failed.")
-    
-    return decrypted_message.decode('utf-8')
+    text = '\n'.join(steps)
+    ax.text(0.05, 0.95, text, fontsize=12, va='top', ha='left', transform=ax.transAxes, wrap=True)
 
-def encrypt_file(public_key, file_path):
-    with open(file_path, 'rb') as f:
-        file_data = f.read()
-    
-    cipher, hash_value = encrypt(public_key, file_data)
-    return cipher, hash_value
-
-def decrypt_file(private_key, ciphertext, hash_value, output_path):
-    decrypted_data = decrypt(private_key, ciphertext, hash_value)
-    with open(output_path, 'wb') as f:
-        f.write(decrypted_data)
-
-def hybrid_encrypt(message):
-    # Generate a random AES key
-    aes_key = get_random_bytes(16)
-    cipher_aes = AES.new(aes_key, AES.MODE_CBC)
-    iv = cipher_aes.iv
-    padded_message = pad(message.encode(), AES.block_size)
-    encrypted_message = cipher_aes.encrypt(padded_message)
-
-    # Encrypt the AES key with RSA
-    rsa_key = generate_keypair()
-    encrypted_aes_key, hash_value = encrypt(rsa_key[0], aes_key)
-
-    return (encrypted_aes_key, iv, encrypted_message), rsa_key
-
-def hybrid_decrypt(encrypted_data, private_key):
-    encrypted_aes_key, iv, encrypted_message = encrypted_data
-    aes_key = decrypt(private_key, encrypted_aes_key, b'')  # Hash verification not needed here
-    cipher_aes = AES.new(aes_key, AES.MODE_CBC, iv)
-    decrypted_message = unpad(cipher_aes.decrypt(encrypted_message), AES.block_size)
-    return decrypted_message.decode()
-
-def save_key(key, filename):
-    with open(filename, 'wb') as f:
-        f.write(key)
-
-def load_key(filename):
-    with open(filename, 'rb') as f:
-        return f.read()
+    plt.tight_layout()
+    plt.show()
 
 def main():
-    print("Generating RSA keypair...")
-    public_key, private_key = generate_keypair()
-    
-    # Save keys
-    save_key(public_key[0].to_bytes(256, 'big'), 'public_key.bin')
-    save_key(private_key[0].to_bytes(256, 'big'), 'private_key.bin')
+    # Input prime numbers p and q
+    p = int(input("Enter the first prime number (p): "))
+    q = int(input("Enter the second prime number (q): "))
+
+    if not (is_prime(p) and is_prime(q)):
+        print("Error: Both numbers must be prime.")
+        return
+
+    print(f"Chosen primes: p = {p}, q = {q}")
+    print("Generating keypair...")
+
+    public, private = generate_keypair(p, q)
+
+    display_keys(public, private)
 
     message = input("Enter a message to encrypt: ")
-    
-    # Hybrid Encryption
-    encrypted_data, rsa_key = hybrid_encrypt(message)
-    print("Encrypted data:", encrypted_data)
+    encrypted_msg = encrypt(public, message)
+    decrypted_msg = decrypt(private, encrypted_msg)
 
-    # Decrypting the message
-    decrypted_message = hybrid_decrypt(encrypted_data, private_key)
-    print("Decrypted message:", decrypted_message)
+    display_encrypted_decrypted(encrypted_msg, decrypted_msg)
+    display_rsa_process_plain(p, q, public, private, message, encrypted_msg, decrypted_msg)
 
 if __name__ == "__main__":
     main()
