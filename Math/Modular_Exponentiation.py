@@ -15,9 +15,9 @@ def modular_exponentiation(base, exponent, modulus):
     return result
 
 # Example usage
-x = 7
-n = 17
-m = 21
+x = 2
+n = 4
+m = 260
 
 result = modular_exponentiation(x, n, m)
 print(f"{x}^{n} mod {m} = {result}")

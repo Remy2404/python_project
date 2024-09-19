@@ -7,7 +7,7 @@ def extended_gcd(a, b):
     y = x1
     return gcd, x, y
 
-def modular_inverse(a, m):
+def modular_inverse(a: object, m):
     """Return the modular inverse of a modulo m, if it exists."""
     gcd, x, _ = extended_gcd(a, m)
     if gcd != 1:
