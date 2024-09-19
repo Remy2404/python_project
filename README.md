@@ -19,3 +19,9 @@ This project is a collection of various Python scripts and modules exploring dif
 
 ## Usage
 Navigate to the specific script you want to run and execute it using Python. For example:
+python WEEK10/Bin2.py
+
+
+## Contributing
+Feel free to contribute to this project by submitting pull requests or opening issues for any bugs or feature requests.
+
